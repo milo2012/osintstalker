@@ -1,0 +1,17 @@
+pygraphml==1.0
+BeautifulSoup==3.2.1
+google==1.05
+google-api-python-client==1.1
+pygoogle==0.1
+python-instagram==0.8.0
+python-linkedin==4.0
+lxml==3.2.1
+selenium==2.35.0
+pygeocoder==1.2.1.1
+termcolor==1.1.0
+TwitterSearch==0.78.3
+gdata==2.0.18
+pyfoursquare==0.0.14
+geopy==0.93dev-r0
+oauth2==1.5.211
+pysqlite==2.6.3
