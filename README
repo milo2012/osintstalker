@@ -19,6 +19,8 @@ For geoStalker,y ou will need to supply a bunch of API keys and access_tokens fo
 Dependencies for Geostalker 
 [Tested on Kali Linux]
 
+sudo apt-get install python-setuptools
+
 wget https://pypi.python.org/packages/source/p/pip/pip-1.4.1.tar.gz
 tar xvfz pip-1.4.1.tar.gz
 cd pip-1.4.1
