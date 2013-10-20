@@ -1,11 +1,13 @@
+Python Scripts
+
 fbStalker - OSINT tool for Facebook - Based on Facebook Graph and other stuff
-
-
 geoStalker - OSINT tool for Geolocation related sources - Flickr, Instagram, Twitter, Wigle. The userIDs found is used to find social media accounts across other networks like Facebook, Youtube, Instagram, Google+, Linkedin and Google Search
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 Instructions - Work in Progress
-
 Both scripts require python2.6. Other versions of python has not been tested.
+
+For geoStalker,y ou will need to supply a bunch of API keys and access_tokens for now. The script will be updated later with an easier method on gettingsud the access_tokens.
 
 Dependencies for Geostalker 
 [Tested on Kali Linux]
