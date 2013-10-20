@@ -10,19 +10,41 @@ Geostalker running in Kali Linux
 https://www.youtube.com/watch?v=qUqT9Ct2kg0&feature=youtu.be
 
 ------------------------------------------------------------------------------------------ 
+Instructions for FBstalker
+Install Google Chrome and ChromeDriver on Kali Linux
+If you are using 32 bit Kali Linux (run uname -r to find out)
+wget http://95.31.35.30/chrome/pool/main/g/google-chrome-stable/google-chrome-stable_27.0.1453.93-r200836_i386.deb
 
-Instructions for geoStalker
-geoStalker has been tested and is working on python2.6 and python2.7
+If you are using 64 bit Kali Linux (run uname -r to find out)
+wget http://95.31.35.30/chrome/pool/main/g/google-chrome-stable/google-chrome-stable_27.0.1453.93-r200836_amd64.deb
 
+wget https://chromedriver.googlecode.com/files/chromedriver_linux32_23.0.1240.0.zip
+unzip chromedriver_linux32_23.0.1240.0.zip
+cp chromedriver /usr/local/chromedriver
+chmod 777 /usr/local/chromedriver
+
+Get your Facebook Access Token from https://developers.facebook.com/tools/access_token/
+Edit fbstalker.py and update facebook_access_token, facebook_username (same as email address) and facebook_password.
+
+Run python fbstalker.py -user [facebook target username]
+
+------------------------------------------------------------------------------------------ 
+Instructions for GEOstalker
 For geoStalker, you will need to supply a bunch of API keys and access_tokens for now. The script will be updated later with an easier method on gettingsud the access_tokens.
 
 Dependencies for Geostalker 
 [Tested on Kali Linux]
 
-Download Chromedriver 
+Install Google Chrome and ChromeDriver on Kali Linux
 wget https://chromedriver.googlecode.com/files/chromedriver_linux64_23.0.1240.0.zip
-unzip chromedriver_linux64_23.0.1240.0.zip
-cp chromedriver /usr/local/
+cp chromedriver /usr/local/chromedriver
+chmod 777 /usr/local/chromedriver
+
+If you are using 32 bit Kali Linux (run uname -r to find out)
+wget http://95.31.35.30/chrome/pool/main/g/google-chrome-stable/google-chrome-stable_27.0.1453.93-r200836_i386.deb
+
+If you are using 64 bit Kali Linux (run uname -r to find out)
+wget http://95.31.35.30/chrome/pool/main/g/google-chrome-stable/google-chrome-stable_27.0.1453.93-r200836_amd64.deb
 
 Python2.7
 sudo apt-get install python-setuptools
