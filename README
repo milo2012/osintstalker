@@ -11,7 +11,7 @@ https://www.youtube.com/watch?v=qUqT9Ct2kg0&feature=youtu.be
 
 ------------------------------------------------------------------------------------------ 
 
-Instructions - Work in Progress
+Instructions for geoStalker
 geoStalker has been tested and is working on python2.6 and python2.7
 
 For geoStalker, you will need to supply a bunch of API keys and access_tokens for now. The script will be updated later with an easier method on gettingsud the access_tokens.
@@ -19,7 +19,12 @@ For geoStalker, you will need to supply a bunch of API keys and access_tokens fo
 Dependencies for Geostalker 
 [Tested on Kali Linux]
 
-To install on python2.7
+Download Chromedriver 
+wget https://chromedriver.googlecode.com/files/chromedriver_linux64_23.0.1240.0.zip
+unzip chromedriver_linux64_23.0.1240.0.zip
+cp chromedriver /usr/local/
+
+Python2.7
 sudo apt-get install python-setuptools
 
 wget https://pypi.python.org/packages/source/p/pip/pip-1.4.1.tar.gz
