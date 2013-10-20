@@ -33,6 +33,7 @@ pip install pysqlite
 pip install TwitterSearch
 pip install foursquare
 
+
 wget https://gdata-python-client.googlecode.com/files/gdata-2.0.18.tar.gz
 tar xvfz gdata-2.0.18.tar.gz
 cd gdata-2.0.18
