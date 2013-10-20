@@ -12,49 +12,50 @@ https://www.youtube.com/watch?v=qUqT9Ct2kg0&feature=youtu.be
 ------------------------------------------------------------------------------------------ 
 
 Instructions - Work in Progress
-Both scripts require python2.6. Other versions of python has not been tested.
+geoStalker has been tested and is working on python2.6 and python2.7
 
-For geoStalker,y ou will need to supply a bunch of API keys and access_tokens for now. The script will be updated later with an easier method on gettingsud the access_tokens.
+For geoStalker, you will need to supply a bunch of API keys and access_tokens for now. The script will be updated later with an easier method on gettingsud the access_tokens.
 
 Dependencies for Geostalker 
 [Tested on Kali Linux]
 
+To install on python2.7
 sudo apt-get install python-setuptools
 
 wget https://pypi.python.org/packages/source/p/pip/pip-1.4.1.tar.gz
 tar xvfz pip-1.4.1.tar.gz
 cd pip-1.4.1
-sudo python2.6 setup.py install
+sudo python2.7 setup.py install
 
 git clone https://github.com/hadim/pygraphml.git
 cd pygraphml
-python2.6 setup.py install
+python2.7 setup.py install
 
-pip install google
-pip install python-instagram
-pip install pygoogle
-pip install geopy
-pip install lxml
-pip install oauth2
-pip install python-linkedin
-pip install pygeocoder
-pip install selenium
-pip install termcolor
-pip install pysqlite
-pip install TwitterSearch
-pip install foursquare
+pip-2.7 install google
+pip-2.7 install python-instagram
+pip-2.7 install pygoogle
+pip-2.7 install geopy
+pip-2.7 install lxml
+pip-2.7 install oauth2
+pip-2.7 install python-linkedin
+pip-2.7 install pygeocoder
+pip-2.7 install selenium
+pip-2.7 install termcolor
+pip-2.7 install pysqlite
+pip-2.7 install TwitterSearch
+pip-2.7 install foursquare
 
 
 wget https://gdata-python-client.googlecode.com/files/gdata-2.0.18.tar.gz
 tar xvfz gdata-2.0.18.tar.gz
 cd gdata-2.0.18
-python2.6 setup.py install
+python2.7 setup.py install
 
 ------------------------------------------------------------------------------------------ 
 ********************************* HOW TO USE geoStalker **********************************
 1.	Fill in the API keys and access_tokens in geostalker.py 
 2.	If an API key or access_token is missing, it will skip that particular social network API lookup/search
-3.	Run 'sudo python2.6 geostalker.py'
+3.	Run 'sudo python2.7 geostalker.py'
 4.	Input a physical address or GPS coordinates
 
 
