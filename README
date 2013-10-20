@@ -53,8 +53,8 @@ Dependencies for Geostalker
 
 Install Google Chrome and ChromeDriver on Kali Linux
 wget https://chromedriver.googlecode.com/files/chromedriver_linux64_23.0.1240.0.zip
-cp chromedriver /usr/local/chromedriver
-chmod 777 /usr/local/chromedriver
+cp chromedriver /usr/bin/chromedriver
+chmod 777 /usr/bin/chromedriver
 
 If you are using 32 bit Kali Linux (run uname -r to find out)
 wget http://95.31.35.30/chrome/pool/main/g/google-chrome-stable/google-chrome-stable_27.0.1453.93-r200836_i386.deb
