@@ -23,6 +23,22 @@ unzip chromedriver_linux32_23.0.1240.0.zip
 cp chromedriver /usr/local/chromedriver
 chmod 777 /usr/local/chromedriver
 
+sudo apt-get install python-setuptools
+wget https://pypi.python.org/packages/source/p/pip/pip-1.4.1.tar.gz
+tar xvfz pip-1.4.1.tar.gz
+cd pip-1.4.1
+sudo python2.7 setup.py install
+
+pip install pytz
+pip install tzlocal
+pip install termcolor
+pip install selenium
+pip install requests --upgrade
+
+git clone https://github.com/hadim/pygraphml.git
+cd pygraphml
+python2.7 setup.py install
+
 Get your Facebook Access Token from https://developers.facebook.com/tools/access_token/
 Edit fbstalker.py and update facebook_access_token, facebook_username (same as email address) and facebook_password.
 
