@@ -74,7 +74,7 @@ linkedin_username = ""
 linkedin_password = ""
 
 #Flick
-http://www.flickr.com/services/apps/create/apply
+#http://www.flickr.com/services/apps/create/apply
 flickr_key = ""
 flickr_secret = ""
 flickr_oauth_token = ""
