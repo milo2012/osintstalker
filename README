@@ -40,8 +40,7 @@ git clone https://github.com/hadim/pygraphml.git
 cd pygraphml
 python2.7 setup.py install
 
-Get your Facebook Access Token from https://developers.facebook.com/tools/access_token/
-Edit fbstalker.py and update facebook_access_token, facebook_username (same as email address) and facebook_password.
+Edit fbstalker.py and update facebook_username (same as email address) and facebook_password.
 
 Run python fbstalker.py -user [facebook target username]
 
