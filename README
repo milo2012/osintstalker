@@ -34,6 +34,7 @@ pip install tzlocal
 pip install termcolor
 pip install selenium
 pip install requests --upgrade
+pip install beautifulsoup4 
 
 git clone https://github.com/hadim/pygraphml.git
 cd pygraphml
