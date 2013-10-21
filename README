@@ -20,8 +20,8 @@ wget http://95.31.35.30/chrome/pool/main/g/google-chrome-stable/google-chrome-st
 
 wget https://chromedriver.googlecode.com/files/chromedriver_linux32_23.0.1240.0.zip
 unzip chromedriver_linux32_23.0.1240.0.zip
-cp chromedriver /usr/local/chromedriver
-chmod 777 /usr/local/chromedriver
+cp chromedriver /usr/bin/chromedriver
+chmod 777 /usr/bin/chromedriver
 
 sudo apt-get install python-setuptools
 wget https://pypi.python.org/packages/source/p/pip/pip-1.4.1.tar.gz
