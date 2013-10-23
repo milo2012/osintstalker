@@ -285,13 +285,13 @@ def findUser(findName):
 		count+=1
 
 def convertUser2ID2(driver,username):
-	url="https://graph.facebook.com/"+username
+	url="http://graph.facebook.com/"+username
 	resp, content = h.request(url, "GET")
 	if resp.status==200:
 		results = json.loads(content)
 		if len(results['id'])>0:
 			fbid = results['id']
-	return fbid
+			return fbid
 
 def convertUser2ID(username):
 	stmt = "SELECT uid,current_location,username,name FROM user WHERE username=('"+username+"')"
@@ -1747,7 +1747,11 @@ def mainProcess(username):
 	
 	loginFacebook(driver)
 	uid = convertUser2ID2(driver,username)
-	print "[*] Uid:\t"+str(uid)
+	if not uid:
+		print "[!] Problem converting username to uid"
+		sys.exit()
+	else:
+		print "[*] Uid:\t"+str(uid)
 
 	filename = username+'_apps.htm'
 	if not os.path.lexists(filename):
