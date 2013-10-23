@@ -28,7 +28,6 @@ import time,re,sys
 from selenium.webdriver.common.keys import Keys
 import datetime
 from bs4 import BeautifulSoup
-from lxml import etree, html
 from StringIO import StringIO
 
 requests.adapters.DEFAULT_RETRIES = 10
