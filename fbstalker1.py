@@ -285,30 +285,12 @@ def findUser(findName):
 		count+=1
 
 def convertUser2ID2(driver,username):
-	filename = "fbid_"+username+".html"
-
-	if not os.path.lexists(filename):
-		print "[*] Caching Profile Page: "+username
-		html1 = downloadFile('https://m.facebook.com/'+username)
-		text_file = open(filename, "w")
-		text_file.write(normalize(html1))
-		text_file.close()
-	else:
-		html1 = open(filename, 'r').read()	
-	soup1 = BeautifulSoup(html1)
-	profilePic = soup1.find("img",{"class" : "l profpic img"})
-	fbid = ""
-	if profilePic:
-		fbid = profilePic["src"].split('_')[1]
-	
-	"""
-	driver.get("https://www.facebook.com/"+username)
-	time.sleep(3)
-	profilePic = driver.find_element_by_xpath('//*[@id="fbTimelineHeadline"]/div[3]/div/meta')
-	profilePicStr = profilePic.get_attribute("content")
-	tempList =  profilePicStr.split('_')
-	fbid = tempList[1]
-	"""
+	url="https://graph.facebook.com/"+username
+	resp, content = h.request(url, "GET")
+	if resp.status==200:
+		results = json.loads(content)
+		if len(results['id'])>0:
+			fbid = results['id']
 	return fbid
 
 def convertUser2ID(username):
