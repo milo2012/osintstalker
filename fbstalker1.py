@@ -348,7 +348,10 @@ def loginFacebook(driver):
 	driver.find_element_by_id("loginbutton").click()
 	global all_cookies
 	all_cookies = driver.get_cookies()
-
+	html = driver.page_source
+	if "Incorrect Email/Password Combination" in html:
+		print "[!] Incorrect Facebook username (email address) or password"
+		sys.exit()
 def write2Database(dbName,dataList):
 	try:
 		cprint("[*] Writing "+str(len(dataList))+" record(s) to database table: "+dbName,"white")
