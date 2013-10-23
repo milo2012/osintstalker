@@ -98,6 +98,7 @@ lng = ''
 htmlHeader = '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><meta charset="UTF-8"><title>Google Maps Example</title><script src=\'http://code.jquery.com/jquery.min.js\' type=\'text/javascript\'></script></head><body><script type="text/javascript" src="http://maps.google.com/maps/api/js?sensor=false"></script>'
 
 def createDatabase():
+	conn = sqlite3.connect('geostalking.db')
 	c = conn.cursor()
 	sql = 'create table if not exists twitter (username TEXT, tweet TEXT unique, latitude TEXT, longitude TEXT , origLat TEXT, origLng TEXT)'
 	sql1 = 'create table if not exists instagram (username TEXT, latitude TEXT, longitude TEXT, url TEXT unique , origLat TEXT, origLng TEXT)'
@@ -111,8 +112,8 @@ def createDatabase():
 	conn.commit()
 	
 
-conn = sqlite3.connect('geostalking.db')
 createDatabase()
+conn = sqlite3.connect('geostalking.db')
 
 def normalize(s):
 	if type(s) == unicode: 
