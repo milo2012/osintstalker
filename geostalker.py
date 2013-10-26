@@ -45,18 +45,26 @@ import urllib
 import urllib2
 import webbrowser
 import zlib
+
 tweetList = []
 globalUserList = []
+nodeList = []
+edgeList = []	
+foursqTwitterSearch = []
+
 report = ""
 maltegoXML = ''
 wirelessAPData = ""
 
-#Gmail 
+#Gmail
 google_username = ""
 google_password = ""
 google_drive_collection = "kkk"
 
 #Instagram
+#http://instagram.com/developer/register/
+instagram_client_id = ""
+instagram_client_secret = ""
 instagram_access_token = ""
 
 #Foursquare
@@ -74,7 +82,8 @@ linkedin_username = ""
 linkedin_password = ""
 
 #Flick
-#http://www.flickr.com/services/apps/create/apply
+#Instructions on getting oauth token and secret
+#http://librdf.org/flickcurl/api/flickcurl-auth-authenticate.html
 flickr_key = ""
 flickr_secret = ""
 flickr_oauth_token = ""
@@ -98,7 +107,6 @@ lng = ''
 htmlHeader = '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><meta charset="UTF-8"><title>Google Maps Example</title><script src=\'http://code.jquery.com/jquery.min.js\' type=\'text/javascript\'></script></head><body><script type="text/javascript" src="http://maps.google.com/maps/api/js?sensor=false"></script>'
 
 def createDatabase():
-	conn = sqlite3.connect('geostalking.db')
 	c = conn.cursor()
 	sql = 'create table if not exists twitter (username TEXT, tweet TEXT unique, latitude TEXT, longitude TEXT , origLat TEXT, origLng TEXT)'
 	sql1 = 'create table if not exists instagram (username TEXT, latitude TEXT, longitude TEXT, url TEXT unique , origLat TEXT, origLng TEXT)'
@@ -112,14 +120,15 @@ def createDatabase():
 	conn.commit()
 	
 
-createDatabase()
 conn = sqlite3.connect('geostalking.db')
+createDatabase()
 
 def normalize(s):
 	if type(s) == unicode: 
        		return s.encode('utf8', 'ignore')
 	else:
         	return str(s)
+	        	
 def createLink(label):
 	xmlString = '<mtg:MaltegoLink xmlns:mtg="http://maltego.paterva.com/xml/mtgx" type="maltego.link.manual-link">'
 	xmlString += '<mtg:Properties>'
@@ -287,7 +296,7 @@ def createGoogleMap(dataList,lat,lng):
 		popupHtml += i[0]+'<br>'
 		popupHtml += i[1]+','+i[2]+'<br>'
 		moreInfo = i[4]
-		popupHtml += moreInfo
+		popupHtml += moreInfo.decode('utf-8')
 		popupHtml = popupHtml.replace('\n',' ').replace('\r',' ')
 		
 		if len(i[3].strip())<1:
@@ -680,16 +689,18 @@ def retrieveGoogleResults(username):
 	keyword = username
 	tmpStr = "\n************ Google Search Results for "+username+" ************\n"
 	print tmpStr
-	for url in search(keyword, stop=20):
-		results.append(url)
-	google.cookie_jar.clear()
-	for i in results:
-		print i
-		tmpStr += i+'\n'
-		report += '\n'+str(normalize(i))
-	print "\n"
-	return tmpStr
-
+	try:
+		for url in search(keyword, stop=20):
+			results.append(url)
+		google.cookie_jar.clear()
+		for i in results:
+			print i
+			tmpStr += i+'\n'
+			report += '\n'+str(normalize(i))
+		print "\n"
+		return tmpStr
+	except urllib2.HTTPError:
+		return ""
 def retrieveLinkedinData(username):
 	print '\n[*] Searching on Linkedin for: '+username
 	global report
@@ -706,7 +717,7 @@ def retrieveLinkedinData(username):
 
 	resp, content = client.request("http://api.linkedin.com/v1/people-search?first-name="+firstname+"&last-name="+lastname,"GET","")
 	if resp['status']=="200":
-		report += "\n\n[*] Foursquare Search Results"
+		report += "\n\n[*] Linkedin Search Results"
 		report += '\nUsername: '+username
 		RETURN_URL = "http://127.0.0.1"	
 		authentication = linkedin.LinkedInDeveloperAuthentication(linkedin_api_key, linkedin_api_secret,
@@ -822,7 +833,7 @@ def retrieveInstagramData(lat,lng):
 def retrieveFlickrData(lat,lng):
 	print "\n[*] Downloading Flickr Data Based on Geolocation"
 	global report
-	report += '\n[*] Foursquare Search Results'
+	report += '\n[*] Flickr Search Results'
 	resultsList = []
 	import flickrapi
 	h = httplib2.Http(".cache")
@@ -913,6 +924,58 @@ def googlePlusSearch(username):
 	return googlePlusUserList
 	
 
+
+def retrieve4sqOnTwitterResults():
+	global report
+	report += '\n\n[*] Retrieving Tweets for Foursquare Check In'
+	print '\n\n[*] Retrieving Tweets for Foursquare Check In (Experiemental)'
+	try:
+		tmpList = []
+		for element in foursqTwitterSearch:	
+			geoLat = element[1]
+			geoLng = element[2]	
+			stripLoc = (element[0].replace('4sq.com/','')).strip()
+			tso = TwitterSearchOrder() 	
+			tso.setKeywords([stripLoc]) 
+			tso.setCount(7) 
+			tso.setIncludeEntities(False)
+			ts = TwitterSearch(
+				consumer_key = twitter_consumer_key,
+				consumer_secret = twitter_consumer_secret,
+				access_token = twitter_access_key ,
+				access_token_secret = twitter_access_secret
+			 )
+			for tweet in ts.searchTweetsIterable(tso): 
+				print tweet
+				screenName = (normalize(tweet['user']['screen_name']))
+				tweetMsg = normalize(tweet['text'])
+				tmpStr = '@%s: %s' % (screenName, tweetMsg )
+				global lat, lng
+				geoLat = lat
+				geoLng = lng
+
+				report += '\n'+tmpStr.decode("utf8")
+				tmpStr = '@%s: %s (%s,%s)' % (screenName, tweetMsg,geoLat,geoLng )
+				print str(normalize(tmpStr.encode('ascii','ignore')))
+
+				tweetText = ''
+				try:	
+					tweetText = tweet['text'].replace("'","\\'")
+					tweetText = str(normalize(tweetText.encode('ascii','ignore')))
+					#print tweetText
+				except: 
+					continue
+				tmpList.append(['https://www.twitter.com/'+str(normalize(tweet['user']['screen_name'])),geoLat, geoLng,'',tweetText])
+				global globalUserList
+				if str(normalize(tweet['user']['screen_name'])) not in globalUserList:
+					globalUserList.append(str(normalize(tweet['user']['screen_name'])))				
+				tempList1 = []
+				tempList1.append(['https://www.twitter.com/'+str(normalize(tweet['user']['screen_name'])),(tweet['text']).encode('ascii','ignore'),geoLat, geoLng ,lat,lng])	
+				write2Database('twitter',tempList1)
+		return tmpList
+	except TwitterSearchException as e: 
+		print(e)
+
 def retrieveTwitterResults(lat,lng):
 	lat = float(lat)
 	lng = float(lng)
@@ -933,7 +996,7 @@ def retrieveTwitterResults(lat,lng):
 			access_token_secret = twitter_access_secret
 		 )
 		for tweet in ts.searchTweetsIterable(tso): 
-			if time.time()>start_time+30.0:
+			if time.time()>start_time+15.0:
 			#if time.time()>start_time+30.0:
 				break
 			else:
@@ -946,7 +1009,7 @@ def retrieveTwitterResults(lat,lng):
 					geoLng = geoLng.strip()
 				except TypeError:
 						continue
-				tmpStr = '[Twitter] @%s: %s (%s,%s)' % (screenName, tweetMsg,geoLat,geoLng )
+				tmpStr = '@%s: %s (%s,%s)' % (screenName, tweetMsg,geoLat,geoLng )
 				try:
 					print str(normalize(tmpStr.encode('ascii','ignore')))
 					report += '\n'+str(normalize(tmpStr.encode('ascii','ignore')))		
@@ -1004,6 +1067,7 @@ def retrieve4sqData(lat,lng):
 	data = client.venues.search(params={'ll': geolocation,'limit':count })
 	for venue in data['venues']:
 		location = client.venues(venue['id'])
+		
 		html = ''
 		try:
 			html += location['venue']['location']['address']+'<br>'
@@ -1035,6 +1099,15 @@ def retrieve4sqData(lat,lng):
 		pt1 = geopy.Point(lat, lng)
 		pt2 = geopy.Point(locLat, locLng)
 		dist = geopy.distance.distance(pt1, pt2).meters
+		
+		#Get short url for 4sq sites. Use this to search for 4sq checkins in Twitter
+		r = requests.get('https://foursquare.com/v/venues/'+str(venue['id']))
+		html = r.content
+		soup2 = BeautifulSoup(html)
+		shortUrl = soup2.find("input", {"class" : "shareLink formStyle"})
+		global foursqTwitterSearch
+		foursqTwitterSearch.append([shortUrl['value'].strip("http://"),locLat,locLng])
+				
 			       		
 		report += "\nFound "+venueName+"\t"+"("+locLat+","+locLng+")"+"\t"+str(dist)+" meters"
 		print "[*] Found "+venueName+"\t"+"("+locLat+","+locLng+")"+"\t"+str(dist)+" meters"
@@ -1281,86 +1354,13 @@ def createMaltegoUsername():
 	print 'Closing'
 	zf.close()
 
-def geoLocationSearch(lat,lng):
-	htmlfile = open("result.html", "w")
-	html = '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">'
-	html += '<html xmlns="http://www.w3.org/1999/xhtml">'
-	html += '<head>'
-	html += '<title>Geostalker Tool Google Maps</title>'
-	html += "<script src='http://code.jquery.com/jquery.min.js' type='text/javascript'></script>"
-	html += '</head>'
-	html += '<body>'
-	html += '<script type="text/javascript" src="http://maps.google.com/maps/api/js?sensor=false"></script>'
-	htmlfile.write(html)
-	htmlfile.write('<br><b>Wireless Access Point Database Lookup from Wigle.net</b><br>')
-	
-	if len(wigle_username)>0:
-		wigle_cookie = loginWigle(wigle_username, wigle_password)
-		html1 = downloadWigle(lat,lng,wigle_cookie)    	
-		htmlfile.write(html1)
-
-		filename = str(lat)+'_'+str(lng)+'.dat'
-		parseWigleDat(filename)
-	gpsPoints = []
-		
-	#Foursquare Start
-	if len(foursquare_access_token)>0:
-		dataList = retrieve4sqData(lat,lng)
-		gpsPoints.extend(dataList)
-	
-	#Instagram Start
-	if len(instagram_access_token)>0:
-		dataList = retrieveInstagramData(lat,lng)
-		if dataList:
-			gpsPoints.extend(dataList)
-			write2Database('instagram',dataList)
-	#Flickr Start
-	if len(flickr_oauth_secret)>0:
-		dataList1 = retrieveFlickrData(lat,lng)
-		if len(dataList1)>0:
-			write2Database('flickr',dataList1)
-			html = ''
-			for i in dataList1:
-				html = '<a href="'+i[0]+'">'+i[0]+'</a><br>'+i[1]+'<br>'+i[3]+'<br>'+'<br>'
-				html = html.encode('ascii','replace')
-				gpsPoints.append([('http://www.flickr.com/photos/'+i[2]).encode('ascii','replace'),i[4].encode('ascii','encode'),i[5].encode('ascii','encode'),'',html])		
-
-	#Twitter Start
-	if len(twitter_access_secret)>0:
-		retrieveTwitterResults(lat,lng)
-		gpsPoints.extend(tweetList)
-	html = createGoogleMap(gpsPoints,lat,lng)		
-	#Twitter End
-
-	print "\n[*] Create Google Map using Flickr/Instagram/Twitter Geolocation Data"		
-	htmlfile.write('<br><br>')
-	htmlfile.write('<br><b>Google Map based on Flickr/Instagram/Twitter Geolocation Data</b><br>')
-	htmlfile.write(html.encode('utf8','replace'))
-	htmlfile.write('</body></html>')
-	htmlfile.close()
-
-	#new
-	print "\n[*] Checking additional social networks for active accounts... "
-	g = Graph()
-	totalCount = 50
-	start = 0
-	nodeList = []
-	edgeList = []	
-
-	while(start<totalCount):
-      		nodeList.append("")	
-	        edgeList.append("")
-	        start+=1	
-
-	nodeList[0] = g.add_node('original')
-	nodeList[0]['node'] = createNodeLocation(lat,lng)	
+def usernameSearch(g):
+	global report
 	counter1=1
 	counter2=0                
 	userList=[]	
 	counter3=0
 	secondaryCount = 0
-
-	global report
 
 	global globalUserList			
 	for username in globalUserList:
@@ -1422,6 +1422,8 @@ def geoLocationSearch(lat,lng):
 					secondaryCount+=1
 			except IndexError:
 				continue
+			except requests.exceptions.ConnectionError:
+				continue
 	parser = GraphMLParser()
 	if not os.path.exists(os.getcwd()+'/Graphs'):
     		os.makedirs(os.getcwd()+'/Graphs')
@@ -1436,105 +1438,216 @@ def geoLocationSearch(lat,lng):
 	zf.write('Graphs/Graph1.graphml')
 	print 'Closing'
 	zf.close()
-print ""
-print "MMMMMM$ZMMMMMDIMMMMMMMMNIMMMMMMIDMMMMMMM"
-print "MMMMMMNINMMMMDINMMMMMMMZIMMMMMZIMMMMMMMM"
-print "MMMMMMMIIMMMMMI$MMMMMMMIIMMMM8I$MMMMMMMM"
-print "MMMMMMMMIINMMMIIMMMMMMNIIMMMOIIMMMMMMMMM"
-print "MMMMMMMMOIIIMM$I$MMMMNII8MNIIINMMMMMMMMM"
-print "MMMMMMMMMZIIIZMIIIMMMIIIM7IIIDMMMMMMMMMM"
-print "MMMMMMMMMMDIIIIIIIZMIIIIIII$MMMMMMMMMMMM"
-print "MMMMMMMMMMMM8IIIIIIZIIIIIIMMMMMMMMMMMMMM"
-print "MMMMMMMMMMMNIIIIIIIIIIIIIIIMMMMMMMMMMMMM"
-print "MMMMMMMMM$IIIIIIIIIIIIIIIIIII8MMMMMMMMMM"
-print "MMMMMMMMIIIIIZIIIIZMIIIIIDIIIIIMMMMMMMMM"
-print "MMMMMMOIIIDMDIIIIZMMMIIIIIMMOIIINMMMMMMM"
-print "MMMMMNIIIMMMIIII8MMMMM$IIIZMMDIIIMMMMMMM"
-print "MMMMIIIZMMM8IIIZMMMMMMMIIIIMMMM7IIZMMMMM"
-print "MMM$IIMMMMOIIIIMMMMMMMMMIIIIMMMM8IIDMMMM"
-print "MMDIZMMMMMIIIIMMMMMMMMMMNIII7MMMMNIIMMMM"
-print "MMIOMMMMMNIII8MMMMMMMMMMM7IIIMMMMMM77MMM"
-print "MO$MMMMMM7IIIMMMMMMMMMMMMMIII8MMMMMMIMMM"
-print "MIMMMMMMMIIIDMMMMMMMMMMMMM$II7MMMMMMM7MM"
-print "MMMMMMMMMIIIMMMMMMMMMMMMMMMIIIMMMMMMMDMM"
-print "MMMMMMMMMII$MMMMMMMMMMMMMMMIIIMMMMMMMMMM"
-print "MMMMMMMMNIINMMMMMMMMMMMMMMMOIIMMMMMMMMMM"
-print "MMMMMMMMNIOMMMMMMMMMMMMMMMMM7IMMMMMMMMMM"
-print "MMMMMMMMNINMMMMMMMMMMMMMMMMMZIMMMMMMMMMM"
-print "MMMMMMMMMIMMMMMMMMMMMMMMMMMM8IMMMMMMMMMM"
+	
+def geoLocationSearch(lat,lng):
+	htmlfile = open("result.html", "w")
+	html = '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">'
+	html += '<html xmlns="http://www.w3.org/1999/xhtml">'
+	html += '<head>'
+	html += '<title>Geostalker Tool Google Maps</title>'
+	html += "<script src='http://code.jquery.com/jquery.min.js' type='text/javascript'></script>"
+	html += '</head>'
+	html += '<body>'
+	html += '<script type="text/javascript" src="http://maps.google.com/maps/api/js?sensor=false"></script>'
+	htmlfile.write(html)
+	htmlfile.write('<br><b>Wireless Access Point Database Lookup from Wigle.net</b><br>')
+	
+	if len(wigle_username)>0:
+		wigle_cookie = loginWigle(wigle_username, wigle_password)
+		html1 = downloadWigle(lat,lng,wigle_cookie)    	
+		htmlfile.write(html1)
 
-print "\n**********************************************************"
-print "****** GeoStalker Version 1.0 HackInTheBox Release ******"
-print "**********************************************************\n"
-input = ""
-#input = "252 North Bridge Road singapore"
-input = raw_input("Please enter an address or GPS coordinates (e.g. 1.358143,103.944826): ")
-while len(input.strip())<1:
-	input = raw_input("Please enter an address or GPS coordinates (e.g. 1.358143,103.944826): ")
-try:	
-	if any(c.isalpha() for c in input):
-		lat,lng = address2geocoordinate(input)
-		lat = lat.strip()
-		lng = lng.strip()
-	else:
-		lat,lng = input.split(',')
-		lat = lat.strip()
-		lng = lng.strip()
-	print "[*] Converting address to GPS coordinates: "+str(lat)+" "+str(lng)
-except:
-	pass
-	#print "[!] Geocoding error"
-
-c = conn.cursor()
-c.execute('select distinct username from instagram where origLat=? and origLng=?',(lat,lng,))
-dataList1 = []
-dataList1 = c.fetchall()
-for i in dataList1:
-	x = str(normalize(i))
-	x = str(x.replace('http://instagram.com/',''))
-	if x not in globalUserList:
-		globalUserList.append(x)
-
-c = conn.cursor()
-c.execute('select distinct username from flickr where origLat=? and origLng=?',(lat,lng,))
-dataList1 = []
-dataList1 = c.fetchall()
-for i in dataList1:
-	x = str(i)
-	x = str(x.replace('http://www.flickr.com/photos/',''))
-	if x not in globalUserList:
-		globalUserList.append(x)
-
-c = conn.cursor()
-c.execute('select distinct username from twitter where origLat=? and origLng=?',(lat,lng,))
-dataList1 = []
-dataList1 = c.fetchall()
-for i in dataList1:
-	x = str(normalize(i))
-	x = str(x.replace('https://www.twitter.com/',''))
-	if x not in globalUserList:
-		globalUserList.append(x)
-
-
-#for x in globalUserList:
-#	print x
-geoLocationSearch(lat,lng)
+		filename = str(lat)+'_'+str(lng)+'.dat'
+		parseWigleDat(filename)
+	gpsPoints = []
 		
-print "\n[*] Analysis report has been written to 'report.txt'"
-reportFile = open('report.txt', "w")
-reportFile.write('\n[*] Geolocation')
-reportFile.write('\n('+str(lat)+','+str(lng)+')')
-reportFile.write('\n\n[*] Found User IDs in Area')
-for x in globalUserList:
-	reportFile.write('\n'+str(normalize(x)).encode('utf8','ignore'))
+	#Foursquare Start
+	if len(foursquare_access_token)>0:
+		dataList = retrieve4sqData(lat,lng)
+		gpsPoints.extend(dataList)
 
-reportFile.write(report.encode('utf8','ignore'))
-reportFile.close()
-print "[*] Please refer to 'result.html' for generated Google Maps."		
-filename = 'maltego_'+lat+'_'+lng+'.mtgx'
-altfilename = 'maltego_'+lat+'_'+lng+'_all_searches.mtgx'
-print "[*] Please refer to '"+filename+"' for generated Maltego File containing nearby results from social media sites."
-print "[*] Please refer to '"+altfilename+"' for generated Maltego File containing above plus mapping to other social media accounts (huge map)."
-#createMaltegoGeolocation()
-#createMaltegoUsername()
+	#Instagram Start
+	if len(instagram_access_token)>0:
+		dataList = retrieveInstagramData(lat,lng)
+		if dataList:
+			gpsPoints.extend(dataList)
+			write2Database('instagram',dataList)
+	#Flickr Start
+	if len(flickr_oauth_secret)>0:
+		dataList1 = retrieveFlickrData(lat,lng)
+		if len(dataList1)>0:
+			write2Database('flickr',dataList1)
+			html = ''
+			for i in dataList1:
+				html = '<a href="'+i[0]+'">'+i[0]+'</a><br>'+i[1]+'<br>'+i[3]+'<br>'+'<br>'
+				html = html.encode('ascii','replace')
+				gpsPoints.append([('http://www.flickr.com/photos/'+i[2]).encode('ascii','replace'),i[4].encode('ascii','encode'),i[5].encode('ascii','encode'),'',html])		
+	#Twitter Start
+	if len(twitter_access_secret)>0:
+		retrieveTwitterResults(lat,lng)
+		gpsPoints.extend(tweetList)
+		time.sleep(5)
+		tmpList = retrieve4sqOnTwitterResults()
+		if tmpList:
+			gpsPoints.extend(tmpList)
+		
+	html = createGoogleMap(gpsPoints,lat,lng)		
+	#Twitter End
 
+	print "\n[*] Create Google Map using Flickr/Instagram/Twitter Geolocation Data"		
+	htmlfile.write('<br><br>')
+	htmlfile.write('<br><b>Google Map based on Flickr/Instagram/Twitter Geolocation Data</b><br>')
+	htmlfile.write(html.encode('utf8','replace'))
+	htmlfile.write('</body></html>')
+	htmlfile.close()
+
+	#new
+	print "\n[*] Checking additional social networks for active accounts... "
+	g = Graph()
+	totalCount = 50
+	start = 0
+	global nodeList
+	global edgeList
+
+	while(start<totalCount):
+      		nodeList.append("")	
+	        edgeList.append("")
+	        start+=1	
+
+	nodeList[0] = g.add_node('original')
+	nodeList[0]['node'] = createNodeLocation(lat,lng)	
+
+	global report
+	usernameSearch(g)
+
+
+def showhelp():
+	print ""
+	print "	MMMMMM$ZMMMMMDIMMMMMMMMNIMMMMMMIDMMMMMMM"
+	print "	MMMMMMNINMMMMDINMMMMMMMZIMMMMMZIMMMMMMMM"
+	print "	MMMMMMMIIMMMMMI$MMMMMMMIIMMMM8I$MMMMMMMM"
+	print "	MMMMMMMMIINMMMIIMMMMMMNIIMMMOIIMMMMMMMMM"
+	print "	MMMMMMMMOIIIMM$I$MMMMNII8MNIIINMMMMMMMMM"
+	print "	MMMMMMMMMZIIIZMIIIMMMIIIM7IIIDMMMMMMMMMM"
+	print "	MMMMMMMMMMDIIIIIIIZMIIIIIII$MMMMMMMMMMMM"
+	print "	MMMMMMMMMMMM8IIIIIIZIIIIIIMMMMMMMMMMMMMM"
+	print "	MMMMMMMMMMMNIIIIIIIIIIIIIIIMMMMMMMMMMMMM"
+	print "	MMMMMMMMM$IIIIIIIIIIIIIIIIIII8MMMMMMMMMM"
+	print "	MMMMMMMMIIIIIZIIIIZMIIIIIDIIIIIMMMMMMMMM"
+	print "	MMMMMMOIIIDMDIIIIZMMMIIIIIMMOIIINMMMMMMM"
+	print "	MMMMMNIIIMMMIIII8MMMMM$IIIZMMDIIIMMMMMMM"
+	print "	MMMMIIIZMMM8IIIZMMMMMMMIIIIMMMM7IIZMMMMM"
+	print "	MMM$IIMMMMOIIIIMMMMMMMMMIIIIMMMM8IIDMMMM"
+	print "	MMDIZMMMMMIIIIMMMMMMMMMMNIII7MMMMNIIMMMM"
+	print "	MMIOMMMMMNIII8MMMMMMMMMMM7IIIMMMMMM77MMM"
+	print "	MO$MMMMMM7IIIMMMMMMMMMMMMMIII8MMMMMMIMMM"
+	print "	MIMMMMMMMIIIDMMMMMMMMMMMMM$II7MMMMMMM7MM"
+	print "	MMMMMMMMMIIIMMMMMMMMMMMMMMMIIIMMMMMMMDMM"
+	print "	MMMMMMMMMII$MMMMMMMMMMMMMMMIIIMMMMMMMMMM"
+	print "	MMMMMMMMNIINMMMMMMMMMMMMMMMOIIMMMMMMMMMM"
+	print "	MMMMMMMMNIOMMMMMMMMMMMMMMMMM7IMMMMMMMMMM"
+	print "	MMMMMMMMNINMMMMMMMMMMMMMMMMMZIMMMMMMMMMM"
+	print "	MMMMMMMMMIMMMMMMMMMMMMMMMMMM8IMMMMMMMMMM"
+
+	print """
+	#####################################################
+	#                  geoStalker.py                 #
+	#               [Trustwave Spiderlabs]              #
+	#####################################################
+	Usage: python geoStalker.py [OPTIONS]
+
+	[OPTIONS]
+
+	-location   [Physical Address or Geocoordinates]
+	-user [Username] - Not enabled yet
+	"""
+
+def mainProcess(input):
+	#input = "252 North Bridge Road singapore"
+	#input = raw_input("Please enter an address or GPS coordinates (e.g. 1.358143,103.944826): ")
+	while len(input.strip())<1:
+		input = raw_input("Please enter an address or GPS coordinates (e.g. 1.358143,103.944826): ")
+	try:	
+		if any(c.isalpha() for c in input):
+			print "[*] Converting address to GPS coordinates: "+str(lat)+" "+str(lng)
+			lat,lng = address2geocoordinate(input)
+			lat = lat.strip()
+			lng = lng.strip()
+		else:
+			lat,lng = input.split(',')
+			lat = lat.strip()
+			lng = lng.strip()
+	except:
+		pass
+		#print "[!] Geocoding error"
+
+	c = conn.cursor()
+	c.execute('select distinct username from instagram where origLat=? and origLng=?',(lat,lng,))
+	dataList1 = []
+	dataList1 = c.fetchall()
+	for i in dataList1:
+		x = str(normalize(i))
+		x = str(x.replace('http://instagram.com/',''))
+		if x not in globalUserList:
+			globalUserList.append(x)
+
+	c = conn.cursor()
+	c.execute('select distinct username from flickr where origLat=? and origLng=?',(lat,lng,))
+	dataList1 = []
+	dataList1 = c.fetchall()
+	for i in dataList1:
+		x = str(i)
+		x = str(x.replace('http://www.flickr.com/photos/',''))
+		if x not in globalUserList:
+			globalUserList.append(x)
+
+	c = conn.cursor()
+	c.execute('select distinct username from twitter where origLat=? and origLng=?',(lat,lng,))
+	dataList1 = []
+	dataList1 = c.fetchall()
+	for i in dataList1:
+		x = str(normalize(i))
+		x = str(x.replace('https://www.twitter.com/',''))
+		if x not in globalUserList:
+			globalUserList.append(x)
+
+
+	#for x in globalUserList:
+	#	print x
+	geoLocationSearch(lat,lng)
+		
+	print "\n[*] Analysis report has been written to 'report.txt'"
+	reportFile = open('report.txt', "w")
+	reportFile.write('\n[*] Geolocation')
+	reportFile.write('\n('+str(lat)+','+str(lng)+')')
+	reportFile.write('\n\n[*] Found User IDs in Area')
+	for x in globalUserList:
+		reportFile.write('\n'+str(normalize(x)).encode('utf8','ignore'))
+
+	reportFile.write(report.encode('utf8','ignore'))
+	reportFile.close()
+	print "[*] Please refer to 'result.html' for generated Google Maps."		
+	filename = 'maltego_'+str(lat)+'_'+str(lng)+'.mtgx'
+	altfilename = 'maltego_'+str(lat)+'_'+str(lng)+'_all_searches.mtgx'
+	print "[*] Please refer to '"+filename+"' for generated Maltego File containing nearby results from social media sites."
+	print "[*] Please refer to '"+altfilename+"' for generated Maltego File containing above plus mapping to other social media accounts (huge map)."
+	#createMaltegoGeolocation()
+	#createMaltegoUsername()
+
+
+def options(arguments):
+	user = ""
+	count = 0
+ 	for arg in arguments:
+  		if arg == "-location":
+			count+=1
+   			location = arguments[count+1]
+  	mainProcess(location)
+
+if __name__ == '__main__':
+	if len(sys.argv) <= 1:
+		showhelp()
+		sys.exit()
+ 	else:
+  		options(sys.argv)
+  		sys.exit()
